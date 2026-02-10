@@ -2,21 +2,18 @@
 
 class PatientController {
 
+
     public function index() {
         $patientModel = new Patient();
         $patients = $patientModel->getAll();
         Response::json([
-            "requested_by" => $GLOBALS['user']['email'] ?? 'Unknown User', 
             "data" => $patients
         ]);
     }
 
     public function show() {
         $id = $_GET['id'] ?? null;
-        if (!$id) {
-            Response::json(['error' => 'Patient ID is required'], 400);
-            return;
-        }
+        
         $patientModel = new Patient();
         $patient = $patientModel->findById($id);
         if ($patient) {
@@ -66,8 +63,7 @@ class PatientController {
             return;
         }
 
-        
-        $required = ['name', 'age', 'gender', 'contact', 'disease'];
+        $required = ['name', 'age', 'gender', 'contact', 'disease', 'address'];
         foreach ($required as $f) {
             if (empty($data[$f])) {
                 Response::json(['error' => ucfirst($f) . " is required"], 400);
@@ -75,17 +71,26 @@ class PatientController {
             }
         }
 
+        if (!is_numeric($data['age']) || $data['age'] <= 0) {
+            Response::json(['error' => 'Age must be greater than 0'], 400);
+            return;
+        }
+
+        if (!preg_match('/^[0-9]{10}$/', $data['contact'])) {
+            Response::json(['error' => 'Contact must be 10 digits'], 400);
+            return;
+        }
+
         $patientModel = new Patient();
-      
-$success = $patientModel->update(
-    $id, 
-    $data['name'], 
-    $data['age'], 
-    $data['gender'], 
-    $data['disease'], 
-    $data['contact'],
-    $data['address'] 
-);
+        $success = $patientModel->update(
+            $id, 
+            $data['name'], 
+            $data['age'], 
+            $data['gender'], 
+            $data['disease'], 
+            $data['contact'],
+            $data['address'] 
+        );
 
         if ($success) {
             Response::json(['message' => 'Update successful']);
@@ -94,6 +99,7 @@ $success = $patientModel->update(
         }
     }
 
+  
     public function patch() {
         $id = $_GET['id'] ?? null;
         $data = $GLOBALS['request_data'];
@@ -103,7 +109,6 @@ $success = $patientModel->update(
             return;
         }
 
-     
         if (isset($data['contact']) && !preg_match('/^[0-9]{10}$/', $data['contact'])) {
             Response::json(['error' => 'Contact must be 10 digits'], 400);
             return;
@@ -124,6 +129,7 @@ $success = $patientModel->update(
         }
     }
 
+
     public function delete() {
         $id = $_GET['id'] ?? null;
         $patientModel = new Patient();
@@ -133,4 +139,5 @@ $success = $patientModel->update(
             Response::json(['error' => 'Delete failed'], 500);
         }
     }
+
 }

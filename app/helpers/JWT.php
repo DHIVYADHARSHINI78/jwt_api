@@ -1,7 +1,7 @@
 <?php
 class JWT {
 
-    private static $secret = "your_super_secret_key"; 
+    private static $secret = "dhivya_123"; 
 
     public static function generate($payload) {
    
